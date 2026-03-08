@@ -6,6 +6,10 @@
 
 Cosmic Flux turns your [COSMIC](https://github.com/pop-os/cosmic-epoch) desktop background into a living canvas. Drop in any video (MP4, WebM, MKV) or GIF and watch it play seamlessly behind your windows. Hardware-accelerated decoding keeps CPU usage low, while the panel applet gives you instant access to playback controls, display modes, FPS tuning, and multi-monitor settings — all without leaving your workflow.
 
+<p align="center">
+  <img src="assets/screenshot.png" width="800" alt="Cosmic Flux applet with live wallpaper">
+</p>
+
 ## Components
 
 | Component | Description |
