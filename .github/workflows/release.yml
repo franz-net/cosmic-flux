@@ -21,6 +21,8 @@ jobs:
             libgstreamer1.0-dev \
             libgstreamer-plugins-base1.0-dev \
             libwayland-dev \
+            libxkbcommon-dev \
+            libglib2.0-dev \
             pkg-config \
             just
 
