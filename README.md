@@ -29,9 +29,46 @@ The daemon and applet communicate over D-Bus (`com.system76.CosmicFlux1`).
 - Tuneable FPS cap (5–60 fps) for CPU/quality balance
 - Performance stats (CPU%, RAM, FPS) visible in the applet
 
-## Requirements
+## Install (Pre-built Package)
 
-### Build Dependencies
+Download the latest `.deb` from [Releases](https://github.com/franz-net/cosmic-flux/releases).
+
+```sh
+# Install runtime dependencies
+sudo apt-get install -y \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-vaapi
+
+# Install the package
+sudo dpkg -i cosmic-flux_*_amd64.deb
+
+# Enable the daemon to start with your session
+systemctl --user enable --now cosmic-flux-daemon
+```
+
+Then add the **Cosmic Flux** applet to your COSMIC panel via Settings > Desktop > Panel > Applets.
+
+### Uninstall
+
+```sh
+# Stop and disable the daemon
+systemctl --user disable --now cosmic-flux-daemon
+
+# Remove the package
+sudo dpkg -r cosmic-flux
+```
+
+User configuration in `~/.config/cosmic/` is preserved after uninstall. To remove it as well:
+
+```sh
+rm -rf ~/.config/cosmic/com.system76.CosmicAppletFlux/
+```
+
+## Build from Source
+
+### Requirements
 
 **Rust 1.85+** (edition 2024)
 

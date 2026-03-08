@@ -28,6 +28,7 @@ pub enum Message {
     DaemonState { playing: bool, error: Option<String>, cpu: f64, memory: f64, fps: f64, source_fps: f64 },
     CommandSent,
     DaemonUnavailable,
+    StartDaemon,
 }
 
 pub struct AppModel {
@@ -212,7 +213,10 @@ impl cosmic::Application for AppModel {
         }
 
         if !self.daemon_available {
-            content = content.add(widget::text(fl!("daemon-unavailable")));
+            content = content.add(widget::settings::item(
+                fl!("daemon-unavailable"),
+                widget::button::text(fl!("start-daemon")).on_press(Message::StartDaemon),
+            ));
         }
 
         self.core.applet.popup_container(content).into()
@@ -301,6 +305,18 @@ impl cosmic::Application for AppModel {
             }
             Message::DaemonUnavailable => {
                 self.daemon_available = false;
+            }
+            Message::StartDaemon => {
+                return Task::perform(
+                    async {
+                        tokio::process::Command::new("systemctl")
+                            .args(["--user", "start", "cosmic-flux-daemon"])
+                            .output()
+                            .await
+                            .ok();
+                    },
+                    |_| cosmic::Action::App(Message::CommandSent),
+                );
             }
             Message::OpenFilePicker => {
                 return Task::perform(pick_media_file(), |path| {

@@ -104,3 +104,4 @@ jobs:
         with:
           files: cosmic-flux_*.deb
           generate_release_notes: true
+          body_path: RELEASE_NOTES.md

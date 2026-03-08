@@ -13,9 +13,15 @@ case "$1" in
         if command -v gtk-update-icon-cache >/dev/null 2>&1; then
             gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
         fi
-        # Reload systemd user daemon if possible
+        # Enable and start the daemon for the installing user
         if command -v systemctl >/dev/null 2>&1; then
             systemctl --global daemon-reload || true
+            # If running as a logged-in user (not during image build), enable the service
+            if [ -n "$SUDO_USER" ]; then
+                su - "$SUDO_USER" -c "systemctl --user enable --now cosmic-flux-daemon" || true
+            elif [ -n "$USER" ] && [ "$USER" != "root" ]; then
+                systemctl --user enable --now cosmic-flux-daemon || true
+            fi
         fi
         ;;
 esac

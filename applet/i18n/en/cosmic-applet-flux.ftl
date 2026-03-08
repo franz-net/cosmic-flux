@@ -14,3 +14,4 @@ span-mode = Span across monitors
 fps-cap = FPS limit
 error = Error
 daemon-unavailable = Daemon not running
+start-daemon = Start
