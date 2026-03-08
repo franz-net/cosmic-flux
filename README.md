@@ -175,6 +175,56 @@ Path: `/com/system76/CosmicFlux`
 
 `Playing`, `Source`, `FitMode`, `SpanMode`, `FpsCap`, `Error`, `CpuPercent`, `MemoryMb`, `Fps`, `SourceFps`
 
+## Troubleshooting
+
+### Check daemon status
+
+```sh
+systemctl --user status cosmic-flux-daemon
+```
+
+### View daemon logs
+
+```sh
+journalctl --user -u cosmic-flux-daemon -f
+```
+
+The `-f` flag follows new output in real time. Remove it to see the full log history.
+
+### Restart the daemon
+
+```sh
+systemctl --user restart cosmic-flux-daemon
+```
+
+### Common issues
+
+| Problem | Solution |
+|---------|----------|
+| Wallpaper not showing | Check that the daemon is running: `systemctl --user status cosmic-flux-daemon` |
+| Applet says "Daemon not running" | Click the **Start** button in the applet, or run `systemctl --user start cosmic-flux-daemon` |
+| Video plays but is black/corrupt | Try a different video file. Ensure GStreamer plugins are installed: `apt list --installed \| grep gstreamer` |
+| High CPU usage | Lower the FPS cap in the applet. Use H.264 videos for hardware decode. Check VA-API: `vainfo` |
+| No hardware decode | Install VA-API drivers: `sudo apt install gstreamer1.0-vaapi intel-media-va-driver` (Intel) or `mesa-va-drivers` (AMD) |
+| Wallpaper doesn't restore on login | Ensure the daemon service is enabled: `systemctl --user enable cosmic-flux-daemon` |
+| Applet not visible in panel settings | Verify the desktop entry is installed: `ls /usr/share/applications/com.system76.CosmicAppletFlux.desktop` |
+
+### Reset configuration
+
+```sh
+rm -rf ~/.config/cosmic/com.system76.CosmicAppletFlux/
+systemctl --user restart cosmic-flux-daemon
+```
+
+### Debug logging
+
+Run the daemon manually with verbose output:
+
+```sh
+systemctl --user stop cosmic-flux-daemon
+RUST_LOG=debug cosmic-flux-daemon
+```
+
 ## Development
 
 ```sh

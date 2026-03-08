@@ -1,0 +1,110 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background gradient: deep space -->
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1a1040"/>
+      <stop offset="100%" stop-color="#0a0818"/>
+    </radialGradient>
+
+    <!-- Vortex arm gradient: cosmic energy -->
+    <linearGradient id="arm1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="arm2" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+
+    <!-- Inner spiral gradient -->
+    <linearGradient id="inner1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="inner2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+
+    <!-- Core glow -->
+    <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e0e7ff" stop-opacity="0.9"/>
+      <stop offset="40%" stop-color="#a78bfa" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Star glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Soft outer glow -->
+    <filter id="soft-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="124" fill="url(#bg)" stroke="#2d1b69" stroke-width="2"/>
+
+  <!-- Ambient glow behind vortex -->
+  <circle cx="128" cy="128" r="70" fill="url(#core-glow)" filter="url(#soft-glow)"/>
+
+  <!-- Outer swirl arm 1: top-left to bottom -->
+  <path d="M128 28
+           C80 28, 38 65, 38 112
+           C38 145, 58 172, 88 188"
+        stroke="url(#arm1)" stroke-width="8" stroke-linecap="round" fill="none"
+        filter="url(#soft-glow)" opacity="0.9"/>
+
+  <!-- Outer swirl arm 2: bottom-right to top -->
+  <path d="M128 228
+           C176 228, 218 191, 218 144
+           C218 111, 198 84, 168 68"
+        stroke="url(#arm2)" stroke-width="8" stroke-linecap="round" fill="none"
+        filter="url(#soft-glow)" opacity="0.9"/>
+
+  <!-- Inner spiral 1 -->
+  <path d="M128 68
+           C96 68, 74 92, 74 120
+           C74 144, 88 162, 115 168"
+        stroke="url(#inner1)" stroke-width="6" stroke-linecap="round" fill="none"
+        filter="url(#glow)"/>
+
+  <!-- Inner spiral 2 -->
+  <path d="M128 188
+           C160 188, 182 164, 182 136
+           C182 112, 168 94, 141 88"
+        stroke="url(#inner2)" stroke-width="6" stroke-linecap="round" fill="none"
+        filter="url(#glow)"/>
+
+  <!-- Vortex core -->
+  <circle cx="128" cy="128" r="14" fill="#c4b5fd" filter="url(#glow)"/>
+  <circle cx="128" cy="128" r="8" fill="#ede9fe"/>
+
+  <!-- Stars / energy particles -->
+  <circle cx="48" cy="52" r="3" fill="#c4b5fd" filter="url(#glow)" opacity="0.9"/>
+  <circle cx="208" cy="204" r="3" fill="#f9a8d4" filter="url(#glow)" opacity="0.9"/>
+  <circle cx="196" cy="48" r="2.5" fill="#67e8f9" filter="url(#glow)" opacity="0.8"/>
+  <circle cx="60" cy="208" r="2.5" fill="#a78bfa" filter="url(#glow)" opacity="0.8"/>
+  <circle cx="32" cy="140" r="1.8" fill="#e0e7ff" filter="url(#glow)" opacity="0.7"/>
+  <circle cx="224" cy="116" r="1.8" fill="#e0e7ff" filter="url(#glow)" opacity="0.7"/>
+  <circle cx="160" cy="32" r="2" fill="#c4b5fd" filter="url(#glow)" opacity="0.6"/>
+  <circle cx="96" cy="224" r="2" fill="#f9a8d4" filter="url(#glow)" opacity="0.6"/>
+
+  <!-- Tiny sparkle dots -->
+  <circle cx="72" cy="38" r="1" fill="#e0e7ff" opacity="0.5"/>
+  <circle cx="184" cy="218" r="1" fill="#e0e7ff" opacity="0.5"/>
+  <circle cx="220" cy="80" r="1" fill="#e0e7ff" opacity="0.4"/>
+  <circle cx="36" cy="176" r="1" fill="#e0e7ff" opacity="0.4"/>
+</svg>

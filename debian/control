@@ -11,7 +11,7 @@ Build-Depends: debhelper-compat (= 13),
                libwayland-dev,
                just
 Standards-Version: 4.6.2
-Homepage: https://github.com/franz-net/cosmic-flux
+Homepage: https://www.franz-e.net/cosmic-flux/
 
 Package: cosmic-flux
 Architecture: amd64

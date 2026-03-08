@@ -70,7 +70,7 @@ jobs:
           Depends: gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad
           Recommends: gstreamer1.0-vaapi
           Maintainer: Franz <cosmic-flux-info@franz-net.dev>
-          Homepage: https://github.com/franz-net/cosmic-flux
+          Homepage: https://www.franz-e.net/cosmic-flux/
           Description: Live wallpaper daemon and applet for COSMIC desktop
            Cosmic Flux renders GIF and video files as live wallpapers on the
            COSMIC desktop. Includes a Wayland layer-shell daemon and a COSMIC
