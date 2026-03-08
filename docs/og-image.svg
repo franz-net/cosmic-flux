@@ -1,0 +1,56 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1a1040"/>
+      <stop offset="100%" stop-color="#050508"/>
+    </radialGradient>
+    <linearGradient id="arm1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="arm2" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e0e7ff" stop-opacity="0.8"/>
+      <stop offset="40%" stop-color="#a78bfa" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="soft-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Vortex centered at 350, 315 -->
+  <g transform="translate(350, 315) scale(1.8)">
+    <circle cx="0" cy="0" r="50" fill="url(#core-glow)" filter="url(#soft-glow)"/>
+    <path d="M0 -72 C-34 -72, -64 -48, -64 -12 C-64 12, -50 32, -28 42" stroke="url(#arm1)" stroke-width="6" stroke-linecap="round" fill="none" filter="url(#soft-glow)" opacity="0.9"/>
+    <path d="M0 72 C34 72, 64 48, 64 12 C64 -12, 50 -32, 28 -42" stroke="url(#arm2)" stroke-width="6" stroke-linecap="round" fill="none" filter="url(#soft-glow)" opacity="0.9"/>
+    <path d="M0 -30 C-14 -30, -26 -18, -26 -2 C-26 12, -18 22, -6 24" stroke="url(#arm1)" stroke-width="4.5" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+    <path d="M0 30 C14 30, 26 18, 26 2 C26 -12, 18 -22, 6 -24" stroke="url(#arm2)" stroke-width="4.5" stroke-linecap="round" fill="none" filter="url(#glow)"/>
+    <circle cx="0" cy="0" r="10" fill="#c4b5fd" filter="url(#glow)"/>
+    <circle cx="0" cy="0" r="6" fill="#ede9fe"/>
+  </g>
+
+  <!-- Stars -->
+  <circle cx="150" cy="120" r="2.5" fill="#c4b5fd" filter="url(#glow)" opacity="0.7"/>
+  <circle cx="500" cy="80" r="2" fill="#67e8f9" filter="url(#glow)" opacity="0.6"/>
+  <circle cx="250" cy="520" r="2" fill="#f9a8d4" filter="url(#glow)" opacity="0.5"/>
+  <circle cx="480" cy="560" r="1.5" fill="#a78bfa" filter="url(#glow)" opacity="0.5"/>
+
+  <!-- Text -->
+  <text x="680" y="270" font-family="'Space Grotesk', 'Segoe UI', sans-serif" font-weight="700" font-size="72" fill="#ffffff" letter-spacing="-2">COSMIC FLUX</text>
+  <text x="680" y="330" font-family="'Rajdhani', 'Segoe UI', sans-serif" font-weight="500" font-size="28" fill="#00F0FF" letter-spacing="4" opacity="0.9">LIVE WALLPAPERS FOR COSMIC</text>
+  <text x="680" y="380" font-family="'Rajdhani', 'Segoe UI', sans-serif" font-weight="400" font-size="20" fill="#565666" letter-spacing="1">GPU-Accelerated  //  100% Rust  //  Multi-Monitor</text>
+</svg>
