@@ -1,0 +1,28 @@
+[package]
+name = "cosmic-flux-daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Wayland layer-shell daemon that renders GIF/video to the desktop background"
+
+[[bin]]
+name = "cosmic-flux-daemon"
+path = "src/main.rs"
+
+[dependencies]
+smithay-client-toolkit = { version = "0.20", default-features = false, features = [
+    "calloop",
+    "calloop-wayland-source",
+] }
+wayland-client = "0.31"
+
+gstreamer = "0.23"
+gstreamer-app = "0.23"
+
+tokio = { version = "1", features = ["rt", "macros", "sync"] }
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+
+libc = "0.2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

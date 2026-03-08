@@ -1,0 +1,16 @@
+app-title = Cosmic Flux
+source-file = Wallpaper File
+no-file-selected = No file selected
+playback = Playback
+play = Play
+pause = Pause
+stop = Stop
+stop-wallpaper = Stop Wallpaper
+fit-mode = Display Mode
+fit-zoom = Zoom (crop to fill)
+fit-fit = Fit (letterbox)
+fit-stretch = Stretch
+span-mode = Span across monitors
+fps-cap = FPS limit
+error = Error
+daemon-unavailable = Daemon not running

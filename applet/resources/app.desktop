@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Cosmic Flux
+Comment=Control the Cosmic Flux live wallpaper
+Icon=com.system76.CosmicAppletFlux
+Exec=cosmic-applet-flux %F
+Terminal=false
+StartupNotify=true
+NoDisplay=true
+Categories=COSMIC;
+Keywords=COSMIC;wallpaper;live;flux;
+X-CosmicApplet=true
+X-CosmicHoverPopup=Auto

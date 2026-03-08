@@ -1,0 +1,33 @@
+[package]
+name = "cosmic-applet-flux"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "COSMIC panel applet for controlling the Cosmic Flux wallpaper daemon"
+
+[[bin]]
+name = "cosmic-applet-flux"
+path = "src/main.rs"
+
+[dependencies]
+libcosmic = { git = "https://github.com/pop-os/libcosmic.git", default-features = false, features = [
+    "applet",
+    "applet-token",
+    "dbus-config",
+    "multi-window",
+    "tokio",
+    "wayland",
+    "winit",
+] }
+
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+zbus = { version = "5", default-features = false, features = ["tokio"] }
+
+i18n-embed = { version = "0.16", features = ["fluent-system", "desktop-requester"] }
+i18n-embed-fl = "0.10"
+rust-embed = "8"
+
+ashpd = "0.12"
+futures-util = "0.3"
+anyhow = "1"
+tracing = "0.1"
