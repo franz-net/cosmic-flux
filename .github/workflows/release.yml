@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            libwayland-dev \
+            pkg-config \
+            just
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Cache cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build release binaries
+        run: just build-release
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build .deb package
+        run: |
+          PKG_NAME="cosmic-flux"
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          ARCH="amd64"
+          DEB_DIR="${PKG_NAME}_${VERSION}_${ARCH}"
+
+          mkdir -p "${DEB_DIR}/DEBIAN"
+          mkdir -p "${DEB_DIR}/usr/bin"
+          mkdir -p "${DEB_DIR}/usr/share/applications"
+          mkdir -p "${DEB_DIR}/usr/share/icons/hicolor/scalable/apps"
+          mkdir -p "${DEB_DIR}/usr/lib/systemd/user"
+
+          # Control file
+          cat > "${DEB_DIR}/DEBIAN/control" << EOF
+          Package: ${PKG_NAME}
+          Version: ${VERSION}
+          Section: x11
+          Priority: optional
+          Architecture: ${ARCH}
+          Depends: gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad
+          Recommends: gstreamer1.0-vaapi
+          Maintainer: Franz <cosmic-flux-info@franz-net.dev>
+          Homepage: https://github.com/franz-net/cosmic-flux
+          Description: Live wallpaper daemon and applet for COSMIC desktop
+           Cosmic Flux renders GIF and video files as live wallpapers on the
+           COSMIC desktop. Includes a Wayland layer-shell daemon and a COSMIC
+           panel applet for controlling playback, fit mode, FPS cap, and
+           multi-monitor span mode.
+          EOF
+
+          # Strip leading whitespace from control file (heredoc indentation)
+          sed -i 's/^          //' "${DEB_DIR}/DEBIAN/control"
+
+          # Install files
+          install -m755 target/release/cosmic-flux-daemon "${DEB_DIR}/usr/bin/"
+          install -m755 target/release/cosmic-applet-flux "${DEB_DIR}/usr/bin/"
+          install -m644 applet/resources/app.desktop \
+            "${DEB_DIR}/usr/share/applications/com.system76.CosmicAppletFlux.desktop"
+          install -m644 applet/resources/icon.svg \
+            "${DEB_DIR}/usr/share/icons/hicolor/scalable/apps/com.system76.CosmicAppletFlux.svg"
+          install -m644 applet/resources/icon-stopped.svg \
+            "${DEB_DIR}/usr/share/icons/hicolor/scalable/apps/com.system76.CosmicAppletFlux-stopped.svg"
+          install -m644 data/cosmic-flux-daemon.service \
+            "${DEB_DIR}/usr/lib/systemd/user/"
+
+          # Post-install script (COSMIC check + icon cache + systemd reload)
+          install -m755 debian/postinst "${DEB_DIR}/DEBIAN/postinst"
+
+          dpkg-deb --build --root-owner-group "${DEB_DIR}"
+          echo "DEB_PATH=${DEB_DIR}.deb" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cosmic-flux_*.deb
+          generate_release_notes: true

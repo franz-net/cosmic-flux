@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cargo build --release
+
+override_dh_auto_install:
+	install -Dm755 target/release/cosmic-flux-daemon \
+		debian/cosmic-flux/usr/bin/cosmic-flux-daemon
+	install -Dm755 target/release/cosmic-applet-flux \
+		debian/cosmic-flux/usr/bin/cosmic-applet-flux
+	install -Dm644 applet/resources/app.desktop \
+		debian/cosmic-flux/usr/share/applications/com.system76.CosmicAppletFlux.desktop
+	install -Dm644 applet/resources/icon.svg \
+		debian/cosmic-flux/usr/share/icons/hicolor/scalable/apps/com.system76.CosmicAppletFlux.svg
+	install -Dm644 applet/resources/icon-stopped.svg \
+		debian/cosmic-flux/usr/share/icons/hicolor/scalable/apps/com.system76.CosmicAppletFlux-stopped.svg
+	install -Dm644 data/cosmic-flux-daemon.service \
+		debian/cosmic-flux/usr/lib/systemd/user/cosmic-flux-daemon.service
+
+override_dh_auto_test:
+	# Tests require a running Wayland compositor
+	true
+
+override_dh_auto_clean:
+	cargo clean || true
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Warn if COSMIC desktop is not detected
+        if [ -n "$XDG_CURRENT_DESKTOP" ] && ! echo "$XDG_CURRENT_DESKTOP" | grep -qi "cosmic"; then
+            echo "WARNING: Cosmic Flux requires the COSMIC desktop environment."
+            echo "The current desktop is: $XDG_CURRENT_DESKTOP"
+            echo "The package has been installed but will not function without COSMIC."
+        fi
+        # Update icon cache
+        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
+        fi
+        # Reload systemd user daemon if possible
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl --global daemon-reload || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#

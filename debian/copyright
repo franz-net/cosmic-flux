@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: cosmic-flux
+Upstream-Contact: Franz <cosmic-flux-info@franz-net.dev>
+Source: https://github.com/franz-net/cosmic-flux
+
+Files: *
+Copyright: 2026 Franz Ramirez
+License: GPL-3.0-only
+
+License: GPL-3.0-only
+ On Debian systems, the full text of the GNU General Public
+ License version 3 can be found in the file
+ `/usr/share/common-licenses/GPL-3'.

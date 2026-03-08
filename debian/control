@@ -1,0 +1,28 @@
+Source: cosmic-flux
+Section: x11
+Priority: optional
+Maintainer: Franz <cosmic-flux-info@franz-net.dev>
+Build-Depends: debhelper-compat (= 13),
+               cargo,
+               rustc (>= 1.85),
+               libgstreamer1.0-dev,
+               libgstreamer-plugins-base1.0-dev,
+               pkg-config,
+               libwayland-dev,
+               just
+Standards-Version: 4.6.2
+Homepage: https://github.com/franz-net/cosmic-flux
+
+Package: cosmic-flux
+Architecture: amd64
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         gstreamer1.0-plugins-base,
+         gstreamer1.0-plugins-good,
+         gstreamer1.0-plugins-bad
+Recommends: gstreamer1.0-vaapi
+Description: Live wallpaper daemon and applet for COSMIC desktop
+ Cosmic Flux renders GIF and video files as live wallpapers on the
+ COSMIC desktop. It includes a Wayland layer-shell daemon (cosmic-flux-daemon)
+ and a COSMIC panel applet (cosmic-applet-flux) for controlling playback,
+ fit mode, FPS cap, and multi-monitor span mode.

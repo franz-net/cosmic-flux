@@ -1,8 +1,19 @@
 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Frame -->
-  <path d="M2 2C0 2 0 4 0 4V13C0 13 0 15 2 15H14C16 15 16 13 16 13V4C16 4 16 2 14 2H2ZM2 4H14V13H2V4Z" fill="#232323"/>
-  <!-- Sun -->
-  <circle cx="4.5" cy="6.5" r="1.2" fill="#232323"/>
-  <!-- Mountains -->
-  <path d="M1 13L4.5 8L7 11L9.5 7L15 13H1Z" fill="#232323"/>
+  <!-- Cosmic Flux stopped: same vortex but faded/static feel with pause indicator -->
+
+  <!-- Outer swirl arms (thinner, suggesting dormant state) -->
+  <path d="M8 1C4.5 1 2 3.5 2 6.5C2 8.5 3.2 10.2 5 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="2 1.5" fill="none"/>
+  <path d="M8 15C11.5 15 14 12.5 14 9.5C14 7.5 12.8 5.8 11 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="2 1.5" fill="none"/>
+
+  <!-- Inner spiral (dashed = paused) -->
+  <path d="M8 4.5C6.2 4.5 5 5.8 5 7.5C5 9 6 10 7.5 10.2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="1.5 1.5" fill="none"/>
+  <path d="M8 11.5C9.8 11.5 11 10.2 11 8.5C11 7 10 6 8.5 5.8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-dasharray="1.5 1.5" fill="none"/>
+
+  <!-- Pause bars over center -->
+  <rect x="6.2" y="6.5" width="1.3" height="3" rx="0.3" fill="currentColor"/>
+  <rect x="8.5" y="6.5" width="1.3" height="3" rx="0.3" fill="currentColor"/>
+
+  <!-- Dimmed particles -->
+  <circle cx="2.5" cy="3" r="0.5" fill="currentColor" opacity="0.5"/>
+  <circle cx="13.5" cy="13" r="0.5" fill="currentColor" opacity="0.5"/>
 </svg>
