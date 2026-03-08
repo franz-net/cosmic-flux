@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cosmic Flux — Live Wallpapers for COSMIC Desktop</title>
+  <meta name="description" content="High-performance, hardware-accelerated live wallpaper engine for the COSMIC desktop environment. 100% Rust. GPU-decoded. Zero overhead." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    /* ── Design Tokens ── */
+    :root {
+      --color-primary: #00F0FF;
+      --color-secondary: #7000FF;
+      --color-bg: #050508;
+      --color-surface: #0E0E14;
+      --color-text: #E0E0E6;
+      --color-muted: #565666;
+      --color-accent: #FF2A6D;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Rajdhani', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius-sm: 4px;
+      --radius-lg: 12px;
+      --glow-primary: 0 0 15px rgba(0, 240, 255, 0.4);
+      --glow-heavy: 0 0 30px rgba(0, 240, 255, 0.5), 0 0 60px rgba(0, 240, 255, 0.2);
+    }
+
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-width: thin;
+      scrollbar-color: var(--color-muted) var(--color-bg);
+    }
+
+    body {
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: 18px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    ::selection {
+      background: var(--color-primary);
+      color: var(--color-bg);
+    }
+
+    /* ── Scanline Overlay ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+      background-size: 100% 4px;
+    }
+
+    /* ── Typography ── */
+    h1, h2, h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .micro-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-muted);
+    }
+
+    .text-glow {
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
+    /* ── Status Ticker ── */
+    .ticker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(14, 14, 20, 0.8);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(86, 86, 102, 0.2);
+      overflow: hidden;
+      height: 32px;
+    }
+
+    .ticker-inner {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      animation: ticker-scroll 25s linear infinite;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(0, 240, 255, 0.5);
+    }
+
+    .ticker-inner span { padding: 0 1.5rem; }
+    .ticker-inner .highlight { color: var(--color-primary); }
+
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ── Section Base ── */
+    section {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 2rem;
+    }
+
+    .section-inner {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Hero ── */
+    #hero {
+      flex-direction: column;
+      text-align: center;
+      padding-top: 2rem;
+      overflow: hidden;
+    }
+
+    #hero-canvas-container {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Decorative orbit rings behind title */
+    .hero-rings {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -55%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      border: 1px solid rgba(0, 240, 255, 0.08);
+      border-radius: 50%;
+    }
+
+    .hero-ring:nth-child(1) {
+      width: 500px; height: 500px;
+      margin: -250px 0 0 -250px;
+      animation: pulse-ring 4s ease-in-out infinite;
+    }
+
+    .hero-ring:nth-child(2) {
+      width: 480px; height: 480px;
+      margin: -240px 0 0 -240px;
+      border-style: dashed;
+      border-color: rgba(0, 240, 255, 0.12);
+      opacity: 0.3;
+      transform: rotate(45deg);
+      animation: pulse-ring 4s ease-in-out infinite 1s;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.02); }
+    }
+
+    .hero-ring:nth-child(2) {
+      animation-name: pulse-ring-rotate;
+    }
+
+    @keyframes pulse-ring-rotate {
+      0%, 100% { opacity: 0.3; transform: rotate(45deg) scale(1); }
+      50% { opacity: 0.5; transform: rotate(45deg) scale(1.02); }
+    }
+
+    .hero-title {
+      font-size: clamp(4rem, 10vw, 8rem);
+      text-transform: uppercase;
+      color: #fff;
+      mix-blend-mode: exclusion;
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      margin-bottom: 0;
+      user-select: none;
+    }
+
+    .hero-cta-area {
+      margin-top: clamp(10rem, 18vw, 16rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-body);
+      font-size: clamp(1rem, 2.5vw, 1.35rem);
+      font-weight: 500;
+      color: var(--color-primary);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 0.75rem 2rem;
+      border: 1px solid var(--color-primary);
+      border-radius: var(--radius-lg);
+      color: var(--color-primary);
+      background: transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      position: relative;
+    }
+
+    .cta-button:hover {
+      background: var(--color-primary);
+      color: var(--color-bg);
+      box-shadow: var(--glow-heavy);
+    }
+
+    /* Corner accents on hover */
+    .cta-button::before, .cta-button::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-color: #fff;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .cta-button::before {
+      top: -1px; left: -1px;
+      border-top: 1px solid; border-left: 1px solid;
+    }
+
+    .cta-button::after {
+      bottom: -1px; right: -1px;
+      border-bottom: 1px solid; border-right: 1px solid;
+    }
+
+    .cta-button:hover::before, .cta-button:hover::after { opacity: 1; }
+
+    .hero-version {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(86, 86, 102, 0.6);
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      animation: bounce-down 2s ease-in-out infinite;
+    }
+
+    .scroll-hint svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--color-muted);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes bounce-down {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ── Performance Orbit ── */
+    #performance {
+      background: linear-gradient(180deg, var(--color-bg) 0%, rgba(14, 14, 20, 0.5) 50%, var(--color-bg) 100%);
+    }
+
+    .perf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .perf-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      min-height: 360px;
+    }
+
+    .orbit-ring {
+      position: absolute;
+      border: 1px solid rgba(0, 240, 255, 0.12);
+      border-radius: 50%;
+      animation: orbit-spin 12s linear infinite;
+    }
+
+    .orbit-ring:nth-child(1) { width: 280px; height: 280px; }
+    .orbit-ring:nth-child(2) { width: 320px; height: 320px; animation-duration: 16s; animation-direction: reverse; }
+    .orbit-ring:nth-child(3) { width: 360px; height: 360px; animation-duration: 22s; }
+
+    .orbit-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--color-primary);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--color-primary);
+      top: -3px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    @keyframes orbit-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    #perf-canvas-container {
+      width: 240px;
+      height: 240px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .metric-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .metric-card {
+      background: rgba(14, 14, 20, 0.6);
+      border: 1px solid rgba(86, 86, 102, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: var(--glow-primary);
+    }
+
+    .metric-card h3 {
+      font-size: 1.25rem;
+      color: var(--color-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-card p {
+      color: var(--color-muted);
+      font-size: 0.95rem;
+    }
+
+    .metric-bar {
+      height: 3px;
+      background: rgba(86, 86, 102, 0.3);
+      border-radius: 2px;
+      margin-top: 0.75rem;
+      overflow: hidden;
+    }
+
+    .metric-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+      transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .metric-card.visible .metric-bar-fill { width: var(--fill); }
+
+    /* ── Feature Holo-Deck ── */
+    #features { background: var(--color-bg); }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .features-header h2 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .holo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .holo-card {
+      background: rgba(14, 14, 20, 0.6);
+      border: 1px solid rgba(86, 86, 102, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .holo-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .holo-card:hover {
+      transform: scale(1.03);
+      border-color: var(--color-primary);
+      box-shadow: var(--glow-primary);
+    }
+
+    .holo-card:hover::before { opacity: 1; }
+
+    .holo-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1.25rem;
+      color: var(--color-primary);
+    }
+
+    .holo-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+
+    .holo-card p {
+      color: var(--color-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* ── Terminal / Install ── */
+    #install {
+      background: linear-gradient(180deg, var(--color-bg) 0%, rgba(14, 14, 20, 0.3) 50%, var(--color-bg) 100%);
+    }
+
+    .install-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .install-header h2 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .terminal {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #000;
+      border: 1px solid rgba(86, 86, 102, 0.4);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(14, 14, 20, 0.8);
+      border-bottom: 1px solid rgba(86, 86, 102, 0.3);
+    }
+
+    .terminal-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--color-muted);
+      opacity: 0.5;
+    }
+
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-muted);
+      margin-left: 8px;
+    }
+
+    .terminal-body {
+      padding: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.8;
+      position: relative;
+    }
+
+    .terminal-line { display: flex; flex-wrap: wrap; }
+    .terminal-prompt { color: var(--color-primary); margin-right: 0.75rem; user-select: none; }
+    .terminal-cmd { color: #fff; }
+    .terminal-comment { color: var(--color-muted); }
+    .terminal-output { color: rgba(224, 224, 230, 0.4); }
+
+    .copy-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(14, 14, 20, 0.8);
+      border: 1px solid var(--color-muted);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-muted);
+    }
+
+    .copy-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .copy-btn.copied { border-color: #22c55e; color: #22c55e; }
+    .copy-btn svg { width: 14px; height: 14px; }
+
+    .install-note {
+      text-align: center;
+      margin-top: 2rem;
+      color: var(--color-muted);
+      font-size: 0.9rem;
+    }
+
+    .install-note a {
+      color: var(--color-primary);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+
+    .install-note a:hover { border-bottom-color: var(--color-primary); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid rgba(86, 86, 102, 0.2);
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--color-muted);
+      text-decoration: none;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .footer-links a:hover { color: var(--color-primary); }
+    .footer-links a svg { width: 16px; height: 16px; }
+
+    .footer-legal {
+      color: var(--color-muted);
+      font-size: 13px;
+      opacity: 0.6;
+    }
+
+    /* ── Scroll Animations ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      section { padding: 4rem 1.25rem; }
+      .perf-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .perf-visual { display: none; }
+      .holo-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .terminal-body { font-size: 12px; padding: 1rem; overflow-x: auto; }
+      .hero-title { mix-blend-mode: normal; }
+      .hero-ring { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .footer-links { flex-direction: column; gap: 1rem; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Status Ticker ── -->
+  <div class="ticker" role="marquee" aria-label="Status bar">
+    <div class="ticker-inner">
+      <span class="highlight">COSMIC FLUX</span>
+      <span class="version-tag">:: v0.1.0 BETA</span>
+      <span>:: RUST-NATIVE</span>
+      <span>:: GPU-ACCELERATED</span>
+      <span>:: WAYLAND LAYER-SHELL</span>
+      <span>:: ZERO OVERHEAD</span>
+      <span>:: COSMIC DE COMPATIBLE</span>
+      <!-- Duplicate for seamless loop -->
+      <span class="highlight">COSMIC FLUX</span>
+      <span class="version-tag">:: v0.1.0 BETA</span>
+      <span>:: RUST-NATIVE</span>
+      <span>:: GPU-ACCELERATED</span>
+      <span>:: WAYLAND LAYER-SHELL</span>
+      <span>:: ZERO OVERHEAD</span>
+      <span>:: COSMIC DE COMPATIBLE</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- HERO LANDING                                   -->
+  <!-- ══════════════════════════════════════════════ -->
+  <section id="hero">
+    <div id="hero-canvas-container"></div>
+
+    <div class="hero-content">
+      <!-- Decorative rings -->
+      <div class="hero-rings">
+        <div class="hero-ring"></div>
+        <div class="hero-ring"></div>
+      </div>
+
+      <p class="micro-label fade-in" style="margin-bottom: 1.5rem;">Live Wallpaper Engine for COSMIC Desktop</p>
+
+      <h1 class="hero-title fade-in">COSMIC<br>FLUX</h1>
+
+      <div class="hero-cta-area fade-in fade-in-delay-2">
+        <p class="hero-subtitle">Turn your desktop into a living canvas</p>
+        <a href="#install" class="cta-button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Get Started
+        </a>
+        <span class="hero-version version-tag-full">v0.1.0 // Linux (x86_64)</span>
+      </div>
+    </div>
+
+    <div class="scroll-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- PERFORMANCE ORBIT                              -->
+  <!-- ══════════════════════════════════════════════ -->
+  <section id="performance">
+    <div class="section-inner">
+      <div class="perf-grid">
+        <div class="perf-visual fade-in">
+          <div class="orbit-ring"><div class="orbit-dot"></div></div>
+          <div class="orbit-ring"><div class="orbit-dot"></div></div>
+          <div class="orbit-ring"><div class="orbit-dot"></div></div>
+          <div id="perf-canvas-container"></div>
+        </div>
+        <div class="metric-cards">
+          <div class="metric-card fade-in fade-in-delay-1">
+            <div class="micro-label">Decode Pipeline</div>
+            <h3>GPU Accelerated</h3>
+            <p>Hardware video decode via VA-API. GStreamer auto-selects the optimal decoder for your GPU.</p>
+            <div class="metric-bar"><div class="metric-bar-fill" style="--fill: 95%"></div></div>
+          </div>
+          <div class="metric-card fade-in fade-in-delay-2">
+            <div class="micro-label">System Impact</div>
+            <h3>Near-Zero Overhead</h3>
+            <p>Tuneable FPS cap (5-60), pauses when obscured. Typically under 3% CPU for 1080p wallpapers.</p>
+            <div class="metric-bar"><div class="metric-bar-fill" style="--fill: 12%"></div></div>
+          </div>
+          <div class="metric-card fade-in fade-in-delay-3">
+            <div class="micro-label">Codebase</div>
+            <h3>100% Rust</h3>
+            <p>Built on smithay-client-toolkit and GStreamer bindings. Memory-safe, thread-safe, zero runtime overhead.</p>
+            <div class="metric-bar"><div class="metric-bar-fill" style="--fill: 100%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- FEATURE HOLO-DECK                              -->
+  <!-- ══════════════════════════════════════════════ -->
+  <section id="features">
+    <div class="section-inner">
+      <div class="features-header fade-in">
+        <p class="micro-label">Capabilities</p>
+        <h2>Feature Deck</h2>
+      </div>
+      <div class="holo-grid">
+        <div class="holo-card fade-in fade-in-delay-1">
+          <svg class="holo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="8" height="6" rx="1"/><rect x="14" y="3" width="8" height="6" rx="1"/>
+            <line x1="6" y1="9" x2="6" y2="12"/><line x1="18" y1="9" x2="18" y2="12"/>
+            <rect x="1" y="12" width="22" height="2" rx="1"/>
+          </svg>
+          <h3>Multi-Monitor</h3>
+          <p>Mirror mode clones your wallpaper to every display. Span mode stretches a single video across your entire workspace.</p>
+        </div>
+        <div class="holo-card fade-in fade-in-delay-2">
+          <svg class="holo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <h3>Cinematic Transitions</h3>
+          <p>Smooth 500ms cross-fade blends when switching wallpapers. No jarring cuts, just seamless visual flow.</p>
+        </div>
+        <div class="holo-card fade-in fade-in-delay-3">
+          <svg class="holo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <h3>Instant Resume</h3>
+          <p>Cached last frame persists across restarts. Your wallpaper reappears instantly on login, before the video pipeline even starts.</p>
+        </div>
+        <div class="holo-card fade-in fade-in-delay-1">
+          <svg class="holo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2"/><path d="M10 8l6 4-6 4V8z"/>
+          </svg>
+          <h3>Format Freedom</h3>
+          <p>MP4, WebM, MKV, and GIF. If GStreamer can decode it, Cosmic Flux can render it as your wallpaper.</p>
+        </div>
+        <div class="holo-card fade-in fade-in-delay-2">
+          <svg class="holo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <h3>Live Telemetry</h3>
+          <p>Real-time CPU%, RAM, and FPS stats right in the panel applet. Full visibility into resource usage at a glance.</p>
+        </div>
+        <div class="holo-card fade-in fade-in-delay-3">
+          <svg class="holo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="10" y1="4" x2="10" y2="20"/>
+          </svg>
+          <h3>Panel Applet</h3>
+          <p>Native COSMIC panel integration. File picker, playback controls, display modes, and FPS tuning — all without leaving your workflow.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- TERMINAL / INSTALL                             -->
+  <!-- ══════════════════════════════════════════════ -->
+  <section id="install">
+    <div class="section-inner">
+      <div class="install-header fade-in">
+        <p class="micro-label">Deployment</p>
+        <h2>Installation</h2>
+      </div>
+      <div class="terminal fade-in fade-in-delay-1">
+        <div class="terminal-header">
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <div class="terminal-dot"></div>
+          <span class="terminal-title">user@cosmic-flux:~</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <button class="copy-btn" id="copy-btn" aria-label="Copy install commands">
+            <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copy-label">Copy</span>
+          </button>
+          <div class="terminal-line"><span class="terminal-comment"># Download the latest release</span></div>
+          <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">wget <span class="download-url">https://github.com/franz-net/cosmic-flux/releases/download/v0.1.0/cosmic-flux_0.1.0_amd64.deb</span></span></div>
+          <br/>
+          <div class="terminal-line"><span class="terminal-comment"># Install (automatically pulls dependencies)</span></div>
+          <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-cmd">sudo apt install ./<span class="deb-filename">cosmic-flux_0.1.0_amd64.deb</span></span></div>
+          <br/>
+          <div class="terminal-line"><span class="terminal-output">Setting up cosmic-flux (<span class="version-num">0.1.0</span>) ...</span></div>
+          <div class="terminal-line"><span class="terminal-output">Enabling cosmic-flux-daemon.service...</span></div>
+          <div class="terminal-line"><span class="terminal-output" style="color: var(--color-primary);">Coordinates locked. Welcome to the flux.</span></div>
+        </div>
+      </div>
+      <p class="install-note fade-in fade-in-delay-2">
+        Download the <code>.deb</code> from
+        <a href="https://github.com/franz-net/cosmic-flux/releases" target="_blank" rel="noopener">GitHub Releases</a>.
+        Then add the applet to your panel via Settings &rarr; Desktop &rarr; Panel &rarr; Applets.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- FOOTER                                         -->
+  <!-- ══════════════════════════════════════════════ -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://github.com/franz-net/cosmic-flux" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        Source Code
+      </a>
+      <a href="https://github.com/franz-net/cosmic-flux/releases" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Releases
+      </a>
+      <a href="https://github.com/pop-os/cosmic-epoch" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        COSMIC Desktop
+      </a>
+    </div>
+    <p class="footer-legal">Released under GPL-3.0 &middot; Designed for System76 / COSMIC</p>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- SCRIPTS                                        -->
+  <!-- ══════════════════════════════════════════════ -->
+  <script>
+    // ── Three.js Wireframe Icosahedron Sphere ──
+    function createFluxSphere(containerId, size) {
+      const container = document.getElementById(containerId);
+      if (!container) return null;
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x050508, 0.002);
+
+      const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+      camera.position.z = 3.2;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(size, size);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      // Core sphere group
+      const sphere = new THREE.Group();
+
+      // Inner core — dark with specular highlights
+      const geometry = new THREE.IcosahedronGeometry(1.2, 4);
+      const coreMaterial = new THREE.MeshPhongMaterial({
+        color: 0x050508,
+        emissive: 0x0a0020,
+        specular: 0x00F0FF,
+        shininess: 80,
+        transparent: true,
+        opacity: 0.9,
+      });
+      const coreMesh = new THREE.Mesh(geometry, coreMaterial);
+      sphere.add(coreMesh);
+
+      // Wireframe overlay
+      const wireMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00F0FF,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.12,
+      });
+      const wireMesh = new THREE.Mesh(geometry, wireMaterial);
+      sphere.add(wireMesh);
+
+      // Orbiting particles
+      const particlesGeometry = new THREE.BufferGeometry();
+      const particlesCount = 180;
+      const posArray = new Float32Array(particlesCount * 3);
+      for (let i = 0; i < particlesCount * 3; i++) {
+        posArray[i] = (Math.random() - 0.5) * 5;
+      }
+      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      const particlesMaterial = new THREE.PointsMaterial({
+        size: 0.015,
+        color: 0x00F0FF,
+        transparent: true,
+        opacity: 0.5,
+      });
+      const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+      sphere.add(particlesMesh);
+
+      scene.add(sphere);
+
+      // Lighting
+      scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+
+      const light1 = new THREE.PointLight(0x00F0FF, 1.5);
+      light1.position.set(5, 3, 5);
+      scene.add(light1);
+
+      const light2 = new THREE.PointLight(0x7000FF, 1.0);
+      light2.position.set(-5, -3, 2);
+      scene.add(light2);
+
+      return { renderer, scene, camera, sphere, coreMesh, wireMesh, particlesMesh };
+    }
+
+    // ── Create spheres ──
+    const heroSphereSize = Math.min(window.innerWidth, window.innerHeight);
+    const hero = createFluxSphere('hero-canvas-container', heroSphereSize);
+    const perf = createFluxSphere('perf-canvas-container', 240);
+
+    // Position hero canvas to fill viewport
+    if (hero) {
+      hero.renderer.domElement.style.position = 'absolute';
+      hero.renderer.domElement.style.top = '50%';
+      hero.renderer.domElement.style.left = '50%';
+      hero.renderer.domElement.style.transform = 'translate(-50%, -50%)';
+    }
+
+    // ── Mouse parallax ──
+    let mouseX = 0, mouseY = 0;
+    const halfW = window.innerWidth / 2;
+    const halfH = window.innerHeight / 2;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX - halfW;
+      mouseY = e.clientY - halfH;
+    });
+
+    // ── Resize ──
+    window.addEventListener('resize', () => {
+      if (hero) {
+        const newSize = Math.min(window.innerWidth, window.innerHeight);
+        hero.renderer.setSize(newSize, newSize);
+        hero.camera.aspect = 1;
+        hero.camera.updateProjectionMatrix();
+      }
+    });
+
+    // ── Animation Loop ──
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      // Smooth mouse tracking
+      const targetX = mouseX * 0.001;
+      const targetY = mouseY * 0.001;
+
+      if (hero) {
+        const s = hero.sphere;
+        s.rotation.y += 0.05 * (targetX - s.rotation.y);
+        s.rotation.x += 0.05 * (targetY - s.rotation.x);
+        s.rotation.z += 0.002;
+
+        // Subtle pulse
+        const pulse = 1 + Math.sin(elapsed * 0.8) * 0.02;
+        hero.coreMesh.scale.set(pulse, pulse, pulse);
+        hero.wireMesh.scale.set(pulse + 0.04, pulse + 0.04, pulse + 0.04);
+        hero.particlesMesh.rotation.y -= 0.0008;
+
+        hero.renderer.render(hero.scene, hero.camera);
+      }
+
+      if (perf) {
+        perf.sphere.rotation.y = elapsed * 0.15;
+        perf.sphere.rotation.z += 0.001;
+
+        const pulse = 1 + Math.sin(elapsed * 0.6) * 0.015;
+        perf.coreMesh.scale.set(pulse, pulse, pulse);
+        perf.wireMesh.scale.set(pulse + 0.03, pulse + 0.03, pulse + 0.03);
+        perf.particlesMesh.rotation.y -= 0.0005;
+
+        perf.renderer.render(perf.scene, perf.camera);
+      }
+    }
+    animate();
+
+    // ── Scroll Animations ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.fade-in, .metric-card').forEach(el => observer.observe(el));
+
+    // ── Fetch Latest Version from GitHub API ──
+    (function fetchVersion() {
+      const REPO = 'franz-net/cosmic-flux';
+      const FALLBACK = '0.1.0';
+
+      fetch(`https://api.github.com/repos/${REPO}/releases/latest`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const tag = data.tag_name || '';
+          const version = tag.replace(/^v/, '') || FALLBACK;
+          const prerelease = data.prerelease;
+          const label = prerelease ? 'BETA' : 'STABLE';
+
+          // Update ticker version spans
+          document.querySelectorAll('.version-tag').forEach(el => {
+            el.textContent = `:: v${version} ${label}`;
+          });
+
+          // Update hero version line
+          document.querySelectorAll('.version-tag-full').forEach(el => {
+            el.textContent = `v${version} // Linux (x86_64)`;
+          });
+
+          // Update terminal version numbers
+          document.querySelectorAll('.version-num').forEach(el => {
+            el.textContent = version;
+          });
+
+          // Update download URL and filename
+          const debName = `cosmic-flux_${version}_amd64.deb`;
+          const debUrl = `https://github.com/${REPO}/releases/download/v${version}/${debName}`;
+          document.querySelectorAll('.download-url').forEach(el => {
+            el.textContent = debUrl;
+          });
+          document.querySelectorAll('.deb-filename').forEach(el => {
+            el.textContent = debName;
+          });
+
+          // Store for copy button
+          window._fluxVersion = version;
+        })
+        .catch(() => {
+          window._fluxVersion = FALLBACK;
+        });
+    })();
+
+    // ── Copy Button ──
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      const ver = window._fluxVersion || '0.1.0';
+      const debName = `cosmic-flux_${ver}_amd64.deb`;
+      const commands = `wget https://github.com/franz-net/cosmic-flux/releases/download/v${ver}/${debName}
+sudo apt install ./${debName}`;
+
+      navigator.clipboard.writeText(commands).then(() => {
+        const btn = document.getElementById('copy-btn');
+        const label = document.getElementById('copy-label');
+        const icon = document.getElementById('copy-icon');
+
+        btn.classList.add('copied');
+        label.textContent = 'Copied';
+        icon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          label.textContent = 'Copy';
+          icon.innerHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
+        }, 2000);
+      });
+    });
+  </script>
+
+</body>
+</html>

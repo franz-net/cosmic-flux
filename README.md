@@ -34,21 +34,14 @@ The daemon and applet communicate over D-Bus (`com.system76.CosmicFlux1`).
 Download the latest `.deb` from [Releases](https://github.com/franz-net/cosmic-flux/releases).
 
 ```sh
-# Install runtime dependencies
-sudo apt-get install -y \
-    gstreamer1.0-plugins-base \
-    gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-vaapi
+# Download the latest release
+wget https://github.com/franz-net/cosmic-flux/releases/download/v0.1.0/cosmic-flux_0.1.0_amd64.deb
 
-# Install the package
-sudo dpkg -i cosmic-flux_*_amd64.deb
-
-# Enable the daemon to start with your session
-systemctl --user enable --now cosmic-flux-daemon
+# Install (automatically pulls dependencies)
+sudo apt install ./cosmic-flux_0.1.0_amd64.deb
 ```
 
-Then add the **Cosmic Flux** applet to your COSMIC panel via Settings > Desktop > Panel > Applets.
+The daemon is automatically enabled and started on install. Add the **Cosmic Flux** applet to your COSMIC panel via Settings > Desktop > Panel > Applets.
 
 ### Uninstall
 
