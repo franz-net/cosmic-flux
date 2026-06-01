@@ -2,7 +2,8 @@
 Type=Application
 Name=Cosmic Flux
 Comment=Control the Cosmic Flux live wallpaper
-Icon=com.system76.CosmicAppletFlux
+Comment[fr]=Contrôle du fond d'écran animé Cosmic Flux
+Icon=dev.franz_net.CosmicAppletFlux
 Exec=cosmic-applet-flux %F
 Terminal=false
 StartupNotify=true
